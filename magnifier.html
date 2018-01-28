@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>canvas demo</title>
+</head>
+<body>
+	<canvas id="canvas" style="display: block;margin: 0 auto;border: 1px solid #aaa;"></canvas>
+	
+	
+	<script>
+		var canvas = document.getElementById('canvas')
+		var context = canvas.getContext('2d');
+		
+		var image = new Image();
+
+		window.onload = function(){
+			canvas.width = 1152;
+			canvas.height = 864;
+
+		
+
+			image.src = "img.jpg"
+			image.onload = function(){
+				context.drawImage(image,0,0)
+				
+
+			}
+
+		}
+
+		function windowToCanvas(x,y){
+			var bbox = canvas.getBoundingClientRect();
+			return {x:x-bbox.left,y: y-bbox.top}
+		}
+
+		canvas.onmousedown = function(e){
+			e.preventDefault();
+
+			var point = windowToCanvas(e.clientX,e.clientY);
+			console.log(point.x,point.y)
+
+		}
+
+		canvas.onmousemove = function(e){
+			e.preventDefault();	
+		}
+
+		canvas.onmouseup = function(e){
+			e.preventDefault();
+		}
+
+		canvas.onmouseout = function(e){
+			e.preventDefault();
+		}
+
+		
+
+	</script>
+</body>
+</html>
