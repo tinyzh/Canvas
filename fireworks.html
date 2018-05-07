@@ -42,7 +42,7 @@
             width: 360,
             height: 600,
             canvases: ['bg','firework'],
-            skyColor: 'hsla(210,60%,5%,0.2)',
+            skyColor: 'hsla({hue}, 60%, {lightness}%, 0.2)',
             fireworkTime: {min: 30, max: 60},
             fireworkOpt: {
                 x: undefined,
@@ -100,7 +100,8 @@
                 this.velocity = -3;
 
                 this.opacity = 0.8;
-                this.color = `hsla(${360*Math.random() || 0},80%,60%,1)`;
+                this.hue = 360 * Math.random() | 0;
+                this.color = `hsla(${this.hue},80%,60%,1)`;
                 this.wait = wait || 30 + Math.random() * 30;
 
                 // 微粒个数
@@ -116,6 +117,14 @@
                 for(let i = 0; i < this.count; i++){
                     this.particles.push(new Particle({x:this.xEnd, y: this.yEnd}))
                 }
+            }
+
+            getSkyColor(){
+                const skyColor = {
+                    lightness: this.status == 3 ? this.opacity : 0,
+                    hue: this.hue
+                };
+                return skyColor;
             }
 
             // 升空
@@ -141,7 +150,7 @@
                         ctx.globalCompositeOperation = 'lighter';
                         ctx.globalAlpha = this.opacity;
                         ctx.translate(this.x, this.y);
-                        ctx.scale(0.8,2.5);
+                        ctx.scale(0.8,2.5); // 拉伸 小尾巴长度这里控制
                         ctx.translate(-this.x,-this.y);
                         ctx.fillStyle = this.color;
                         ctx.arc(this.x + Math.sin(Math.PI * 2 * Math.random()) / 1.2, this.y,this.size, 0,Math.PI*2,false);
@@ -203,8 +212,15 @@
             loop(){
                 requestAnimationFrame(this.loop.bind(this));
 //                this.fireworkCtx.clearRect(0,0,this.width,this.height);
-                this.fireworkCtx.fillStyle = config.skyColor;
+//                this.fireworkCtx.fillStyle = config.skyColor;
+                this.skyColor = {
+                    lightness: 0,
+                    hue: 210
+                };
+                this.fireworkCtx.fillStyle = config.skyColor.replace('{lightness}', 5 + this.skyColor.lightness * 15).replace('{hue}' , this.skyColor.hue);
                 this.fireworkCtx.fillRect(0,0,this.width,this.height);
+
+
 
                 if(--this.fireworkTime <= 0){
                     this.fireworks.push(new Fireworks(config.fireworkOpt));
@@ -213,6 +229,7 @@
                 }
 
                 for(let i = this.fireworks.length - 1; i >= 0; --i){
+                    this.skyColor = this.skyColor.lightness >= this.fireworks[i].getSkyColor().lightness ? this.skyColor : this.fireworks[i].getSkyColor();
                     !this.fireworks[i].render(this.fireworkCtx) && this.fireworks.splice(i,1);
                 }
             }
