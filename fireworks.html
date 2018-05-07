@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>烟花</title>
+    <style>
+        *{
+            margin: 0;
+            padding: 0;
+        }
+        html,body{
+            width: 100%;
+            height: 100%;
+
+        }
+        body{
+            position: relative;
+            margin: 0 auto;
+        }
+        canvas{
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+        }
+        #bg{
+            z-index: 5;
+        }
+        #firework{
+            z-index: 8;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="bg" width="360" height="600"></canvas>
+    <canvas id="firework" width="360" height="600"></canvas>
+
+    <script>
+        // 全局配置
+        const config = {
+            width: 360,
+            height: 600,
+            canvases: ['bg','firework'],
+            skyColor: 'hsla(210,60%,5%,0.2)',
+            fireworkTime: {min: 30, max: 60},
+            fireworkOpt: {
+                x: undefined,
+                y: undefined,
+                xEnd: undefined,
+                yEnd: undefined,
+                count: 300,
+                wait: undefined
+            }
+        };
+
+        // 粒子
+        class Particle{
+            constructor({x,y,size = 1,radius = 1.2} = {}){
+                this.x = x;
+                this.y = y;
+                this.size = size;
+
+                this.rate = Math.random(); //速度
+                this.angle = Math.PI * 2 * Math.random(); // 角度
+
+                // 粒子横向和纵向的速度
+                this.vx = radius * Math.cos(this.angle) * this.rate;
+                this.vy = radius * Math.sin(this.angle) * this.rate;
+            }
+
+            go(){
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.02; // 重力加速度
+
+                // 空气阻力
+                this.vx *= 0.98;
+                this.vy *= 0.98;
+            }
+
+            // 渲染粒子
+            render(ctx){
+                this.go();
+                ctx.beginPath();
+                ctx.arc(this.x,this.y,this.size,0,Math.PI * 2, false);
+                ctx.fill();
+            }
+        }
+
+
+        // 烟花
+        class Fireworks{
+            constructor({x,y = config.height,xEnd,yEnd,count = 300,wait} = {}){
+                this.x = x || config.width / 8 + Math.random() * config.width * 3 / 4;
+                this.y = y;
+                this.xEnd = xEnd || this.x;
+                this.yEnd = yEnd || config.width / 8 + Math.random() * config.width * 3 / 8;
+                this.size = 2;
+                this.velocity = -3;
+
+                this.opacity = 0.8;
+                this.color = `hsla(${360*Math.random() || 0},80%,60%,1)`;
+                this.wait = wait || 30 + Math.random() * 30;
+
+                // 微粒个数
+                this.count = count;
+                this.particles = [];
+                this.createParticles();
+
+                this.status = 1;
+            }
+
+            // 创建微粒
+            createParticles(){
+                for(let i = 0; i < this.count; i++){
+                    this.particles.push(new Particle({x:this.xEnd, y: this.yEnd}))
+                }
+            }
+
+            // 升空
+            rise(){
+                this.y += this.velocity * 1;
+                this.velocity += 0.005; // 升空阻力
+                // 烟花到达目标位置开始渐隐
+                if(this.y - this.yEnd <= 50){
+                    this.opacity = (this.y - this.yEnd) / 50;
+                }
+                // 到达目标位置，开始第二个状态
+                if(this.y <= this.yEnd){
+                    this.status = 2;
+                }
+            }
+
+            // 渲染烟花 完成后返回false
+            render(ctx){
+                switch(this.status){
+                    case 1: // 升空
+                        ctx.save();
+                        ctx.beginPath();
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.globalAlpha = this.opacity;
+                        ctx.translate(this.x, this.y);
+                        ctx.scale(0.8,2.5);
+                        ctx.translate(-this.x,-this.y);
+                        ctx.fillStyle = this.color;
+                        ctx.arc(this.x + Math.sin(Math.PI * 2 * Math.random()) / 1.2, this.y,this.size, 0,Math.PI*2,false);
+                        ctx.fill();
+                        ctx.restore();
+
+                        this.rise();
+                        return true;
+                    break;
+                    case 2: // 烟花消失 等待爆炸
+                        if(--this.wait <= 0){
+                            this.opacity = 1;
+                            this.status = 3;
+                        }
+                        return true;
+                    break;
+                    case 3: // 爆炸 渲染烟花
+                        ctx.save();
+                        ctx.globalCompositeOperation = 'lighter';
+                        ctx.globalAlpha = this.opacity;
+                        ctx.fillStyle = this.color;
+                        for(let i = 0; i < this.particles.length; ++i){
+                            this.particles[i].render(ctx)
+                        }
+                        ctx.restore();
+                        this.opacity -= 0.01;
+                        return this.opacity > 0;
+                    break;
+                    default:
+                        return false;
+
+                }
+            }
+        }
+
+        // 放烟花
+        const canvas = {
+            init: function(){
+                this.setProperty();
+                this.renderBg();
+
+
+                this.loop();
+            },
+            setProperty: function(){
+                this.fireworks = [];
+                this.width = config.width;
+                this.height = config.height;
+                this.fireworkTime = (config.fireworkTime.min + (config.fireworkTime.max - config.fireworkTime.min) * Math.random()) | 0;
+
+                this.bgCtx = document.querySelector('#bg').getContext('2d');
+                this.fireworkCtx = document.querySelector('#firework').getContext('2d');
+            },
+            renderBg(){
+                this.bgCtx.fillStyle = 'hsla(210,60%,5%,0.9)';
+                this.bgCtx.fillRect(0,0,this.width,this.height);
+            },
+
+            loop(){
+                requestAnimationFrame(this.loop.bind(this));
+//                this.fireworkCtx.clearRect(0,0,this.width,this.height);
+                this.fireworkCtx.fillStyle = config.skyColor;
+                this.fireworkCtx.fillRect(0,0,this.width,this.height);
+
+                if(--this.fireworkTime <= 0){
+                    this.fireworks.push(new Fireworks(config.fireworkOpt));
+
+                    this.fireworkTime = (config.fireworkTime.min + (config.fireworkTime.max - config.fireworkTime.min) * Math.random()) | 0;
+                }
+
+                for(let i = this.fireworks.length - 1; i >= 0; --i){
+                    !this.fireworks[i].render(this.fireworkCtx) && this.fireworks.splice(i,1);
+                }
+            }
+
+        }
+
+        canvas.init();
+    </script>
+</body>
+</html>
