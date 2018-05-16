@@ -8,7 +8,7 @@ function Arrow(){
 Arrow.prototype.draw = function(context){
 	context.save();
 	context.translate(this.x, this.y); // 移动坐标
-	context.rotate(this.rotation); 
+	context.rotate(this.rotation);  // 弧度 角度转弧度：30度 =》 30 * math.PI / 180 (弧度)
 	context.lineWidth = 5;
 	context.fillStyle = this.color;
 	context.beginPath();

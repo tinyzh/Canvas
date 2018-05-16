@@ -33,7 +33,7 @@
 				let dx = mouse.x - arrow.x,
 					dy = mouse.y - arrow.y;
 
-					arrow.rotation = Math.atan2(dy,dx);
+					arrow.rotation = Math.atan2(dy,dx); // 得到鼠标相对于物体中心的弧度
 					arrow.draw(context);
 
 			})()
