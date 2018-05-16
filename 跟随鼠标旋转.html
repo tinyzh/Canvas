@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>跟随鼠标旋转</title>
+</head>
+<body>
+	
+	<canvas id="canvas" width="500" height="500" style="background:#ccc;">
+		
+	</canvas>
+
+	<script src="utils.js"></script>
+	<script src="arrow.js"></script>
+	<script>
+		window.onload = function(){
+			let canvas = document.getElementById('canvas');
+			let context = canvas.getContext('2d');
+			let centerX = canvas.width / 2;
+			let centerY = canvas.height / 2;
+
+			let mouse = utils.captureMouse(canvas);
+
+			let arrow = new Arrow();
+
+			arrow.x = centerX;
+			arrow.y = centerY;
+
+			(function drawFrame(){
+				window.requestAnimationFrame(drawFrame);
+				context.clearRect(0,0,canvas.width,canvas.height);
+
+				let dx = mouse.x - arrow.x,
+					dy = mouse.y - arrow.y;
+
+					arrow.rotation = Math.atan2(dy,dx);
+					arrow.draw(context);
+
+			})()
+
+
+		}
+	</script>
+
+</body>
+</html>
