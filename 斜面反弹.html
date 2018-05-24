@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>斜面反弹</title>
+</head>
+<body>
+<div class="point">
+    <button id="add">碰撞一下</button>
+</div>
+    <canvas id="canvas" width="500" height="900"></canvas>
+
+    <script>
+        var canvas = document.getElementById('canvas');
+        var context = canvas.getContext('2d');
+        var centerX = canvas.width / 2;
+        var centerY = canvas.height / 2;
+        var requestID = null;
+        var balles = [];
+        var ball = null;
+        var gravity = 0.2;
+        var bounce = -0.6;
+        var line = null;
+        var sin = null;
+        var cos = null;
+
+        document.getElementById('add').addEventListener('click', function() {
+            var x = Math.random() * canvas.width;
+            var y = Math.random() * (canvas.height - 100);
+            ball = new Ball(x, y, 10);
+            animation();
+        });
+
+        function Ball(x, y, radius) {
+            this.x = x;
+            this.y = y;
+            this.radius = radius;
+            this.angle = 0;
+            this.vx = 0;
+            this.vy = 0;
+        };
+        Ball.prototype.draw = function(context) {
+            context.beginPath();
+            context.arc(this.x, this.y, this.radius, 0, 2 * Math.PI, true);
+            context.fill();
+            context.closePath();
+        };
+
+        function Line(x1,y1,x2,y2){
+            this.x = 0;
+            this.y = 0;
+            this.x1 = x1 || 0;
+            this.y1 = y1 || 0;
+            this.x2 = x2 || 0;
+            this.y2 = y2 || 0;
+            this.rotation = 0;
+            this.scaleX = 1;
+            this.scaleY = 1;
+            this.lineWidth = 1;
+        }
+
+        Line.prototype.draw = function(){
+            context.save();
+            context.translate(this.x, this.y); // 平移
+            context.rotate(this.rotation); // 旋转
+            context.scale(this.scaleX, this.scaleY);
+            context.lineWidth = this.lineWidth;
+            context.beginPath();
+            context.moveTo(this.x1,this.y1);
+            context.lineTo(this.x2, this.y2);
+            context.stroke();
+            context.restore();
+        }
+    </script>
+</body>
+</html>
